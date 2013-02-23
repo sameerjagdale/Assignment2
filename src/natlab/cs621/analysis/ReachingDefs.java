@@ -9,6 +9,7 @@ import natlab.toolkits.analysis.Merger;
 import natlab.toolkits.analysis.Mergers;
 import natlab.utils.NodeFinder;
 import nodecases.AbstractNodeCaseHandler;
+import analysis.AbstractSimpleStructuralBackwardAnalysis;
 import analysis.AbstractSimpleStructuralForwardAnalysis;
 import ast.ASTNode;
 import ast.AssignStmt;
@@ -50,57 +51,62 @@ public class ReachingDefs
 
 	@Override
 	public void caseStmt(Stmt node) {
-		inFlowSets.put(node, currentInSet.copy());
-		currentInSet.copy(currentOutSet);
-		outFlowSets.put(node, currentOutSet.copy());
+		// outFlowSets.put(node, currentOutSet.copy());
+		// currentOutSet.copy(currentInSet);
+		// inFlowSets.put(node, currentInSet.copy());
 	}
 
 	@Override
 	public void caseAssignStmt(AssignStmt node) {
-		inFlowSets.put(node, currentInSet.copy());
-
-		// kill. We kill all previous definitions of variables defined by this
-		// statement.
-		// (We don't need the actual defs, just the variables, since we can just
-		// remove by key
-		// in the map). Gathering up the variables can be fairly complicated if
-		// we're just
-		// working with the AST without simplifications; you can have e.g.
-		// * multiple assignments: [x, y] = ...
-		// * complicated lvalues: a(i).b = ...
-		// The getLValues() method takes care of all the cases.
-		Set<String> kill = node.getLValues();
-
-		// gen just maps every lvalue to a set containing this statement.
-		HashMapFlowMap<String, Set<AssignStmt>> gen = newInitialFlow();
-		Set<String> str = node.getRHS().getSymbols();
-		Iterator<String> x = str.iterator();
-		System.out.println("iteration #" + Integer.toString(count));
-		// for (; x.hasNext();) {
-		// System.out.println(x.next());
-		// }
-		System.out.println("end of iteration" + Integer.toString(count++));
-		for (String s : node.getLValues()) {
-			Set<AssignStmt> defs = new HashSet<AssignStmt>();
-			defs.add(node);
-			gen.put(s, defs);
-		}
+		// outFlowSets.put(node, currentOutSet.copy());
+		//
+		// // kill. We kill all previous definitions of variables defined by
+		// this
+		// // statement.
+		// // (We don't need the actual defs, just the variables, since we can
+		// just
+		// // remove by key
+		// // in the map). Gathering up the variables can be fairly complicated
+		// if
+		// // we're just
+		// // working with the AST without simplifications; you can have e.g.
+		// // * multiple assignments: [x, y] = ...
+		// // * complicated lvalues: a(i).b = ...
+		// // The getLValues() method takes care of all the cases.
+		// Set<String> kill = node.getLValues();
+		//
+		// // gen just maps every lvalue to a set containing this statement.
+		// HashMapFlowMap<String, Set<AssignStmt>> gen = newInitialFlow();
+		// Set<String> str = node.getRHS().getSymbols();
+		// Iterator<String> x = str.iterator();
+		// System.out.println("iteration #" + Integer.toString(count));
+		// // for (; x.hasNext();) {
+		// // System.out.println(x.next());
+		// // }
+		// System.out.println("end of iteration" + Integer.toString(count++));
+		// // for (String s : node.getLValues()) {
+		// // Set<AssignStmt> defs = new HashSet<AssignStmt>();
+		// // defs.add(node);
+		// // gen.put(s, defs);
+		// // }
 		// Iterator<ASTNode> I = node.getRHS().iterator();
 		// for (; I.hasNext();) {
 		// Iterable<Name> k = NodeFinder.find(Name.class, I.next());
 		// Iterator<Name> v = k.iterator();
 		// for (; v.hasNext();) {
 		// Name n = v.next();
-		// System.out.println(n.getVarName());
+		// Set<AssignStmt> defs = new HashSet<AssignStmt>();
+		// defs.add(node);
+		// gen.put(n.getVarName(), defs);
 		// }
 		// }
-		// compute (in - kill) + gen
-		currentOutSet = newInitialFlow();
-		currentInSet.copy(currentOutSet);
-		currentOutSet.removeKeys(kill);
-		currentOutSet.union(gen);
-
-		outFlowSets.put(node, currentOutSet.copy());
+		// // compute (in - kill) + gen
+		// currentInSet = newInitialFlow();
+		// currentOutSet.copy(currentInSet);
+		// currentInSet.removeKeys(kill);
+		// currentInSet.union(gen);
+		//
+		// inFlowSets.put(node, currentOutSet.copy());
 	}
 
 	// Copy is straightforward.
