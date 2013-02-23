@@ -39,7 +39,9 @@ public class Main {
 		// Map functions and scripts to their analysis results
 		Map<ASTNode<?>, ReachingDefs> analyses = new HashMap<ASTNode<?>, ReachingDefs>();
 		for (Program unit : program.getPrograms()) {
+
 			if (unit instanceof Script) {
+
 				analyses.put(unit, ReachingDefs.of(unit));
 			} else if (unit instanceof FunctionList) {
 				for (Function f : ((FunctionList) unit).getFunctions()) {

@@ -7,15 +7,13 @@ import java.util.Set;
 import natlab.toolkits.analysis.HashMapFlowMap;
 import natlab.toolkits.analysis.Merger;
 import natlab.toolkits.analysis.Mergers;
-import natlab.utils.NodeFinder;
 import nodecases.AbstractNodeCaseHandler;
 import analysis.AbstractSimpleStructuralBackwardAnalysis;
 import analysis.AbstractSimpleStructuralForwardAnalysis;
 import ast.ASTNode;
 import ast.AssignStmt;
 import ast.EmptyStmt;
-import ast.Expr;
-import ast.Name;
+import ast.NameExpr;
 import ast.Stmt;
 
 /**
@@ -25,11 +23,10 @@ import ast.Stmt;
  */
 public class ReachingDefs
 		extends
-		AbstractSimpleStructuralForwardAnalysis<HashMapFlowMap<String, Set<AssignStmt>>> {
+		AbstractSimpleStructuralBackwardAnalysis<HashMapFlowMap<String, Set<AssignStmt>>> {
 	// Factory method, instantiates and runs the analysis
-	static int count = 0;
-
 	public static ReachingDefs of(ASTNode<?> tree) {
+
 		ReachingDefs analysis = new ReachingDefs(tree);
 		analysis.analyze();
 		return analysis;
@@ -40,7 +37,11 @@ public class ReachingDefs
 	}
 
 	private ReachingDefs(ASTNode tree) {
+
 		super(tree);
+		currentInSet = newInitialFlow();
+		currentOutSet = newInitialFlow();
+
 	}
 
 	// The initial flow is an empty map.
@@ -51,69 +52,72 @@ public class ReachingDefs
 
 	@Override
 	public void caseStmt(Stmt node) {
-		// outFlowSets.put(node, currentOutSet.copy());
-		// currentOutSet.copy(currentInSet);
-		// inFlowSets.put(node, currentInSet.copy());
+		// System.out.println("entering casestmt");
+		if (currentOutSet != null) {
+			// System.out.println("outflowsets is null");
+			outFlowSets.put(node, currentOutSet.copy());
+			currentOutSet.copy(currentInSet);
+		}
+
+		// System.out.println("copied outflowsets");
+
+		// System.out.println("copied outflow to inflow");
+		if (currentInSet != null) {
+			inFlowSets.put(node, currentInSet.copy());
+		}
+		// System.out.println("copied in to in");
 	}
 
 	@Override
 	public void caseAssignStmt(AssignStmt node) {
-		// outFlowSets.put(node, currentOutSet.copy());
-		//
-		// // kill. We kill all previous definitions of variables defined by
-		// this
-		// // statement.
-		// // (We don't need the actual defs, just the variables, since we can
-		// just
-		// // remove by key
-		// // in the map). Gathering up the variables can be fairly complicated
-		// if
-		// // we're just
-		// // working with the AST without simplifications; you can have e.g.
-		// // * multiple assignments: [x, y] = ...
-		// // * complicated lvalues: a(i).b = ...
-		// // The getLValues() method takes care of all the cases.
-		// Set<String> kill = node.getLValues();
-		//
-		// // gen just maps every lvalue to a set containing this statement.
-		// HashMapFlowMap<String, Set<AssignStmt>> gen = newInitialFlow();
-		// Set<String> str = node.getRHS().getSymbols();
-		// Iterator<String> x = str.iterator();
-		// System.out.println("iteration #" + Integer.toString(count));
-		// // for (; x.hasNext();) {
-		// // System.out.println(x.next());
-		// // }
-		// System.out.println("end of iteration" + Integer.toString(count++));
-		// // for (String s : node.getLValues()) {
-		// // Set<AssignStmt> defs = new HashSet<AssignStmt>();
-		// // defs.add(node);
-		// // gen.put(s, defs);
-		// // }
-		// Iterator<ASTNode> I = node.getRHS().iterator();
-		// for (; I.hasNext();) {
-		// Iterable<Name> k = NodeFinder.find(Name.class, I.next());
-		// Iterator<Name> v = k.iterator();
-		// for (; v.hasNext();) {
-		// Name n = v.next();
+		// System.out.println("entering case assign");
+		outFlowSets.put(node, currentOutSet.copy());
+
+		// kill. We kill all previous definitions of variables defined by this
+		// statement.
+		// (We don't need the actual defs, just the variables, since we can just
+		// remove by key
+		// in the map). Gathering up the variables can be fairly complicated if
+		// we're just
+		// working with the AST without simplifications; you can have e.g.
+		// * multiple assignments: [x, y] = ...
+		// * complicated lvalues: a(i).b = ...
+		// The getLValues() method takes care of all the cases.
+		Set<String> kill = node.getLValues();
+
+		// gen just maps every lvalue to a set containing this statement.
+		HashMapFlowMap<String, Set<AssignStmt>> gen = newInitialFlow();
+		// for (String s : node.getLValues()) {
 		// Set<AssignStmt> defs = new HashSet<AssignStmt>();
 		// defs.add(node);
-		// gen.put(n.getVarName(), defs);
+		// gen.put(s, defs);
 		// }
-		// }
-		// // compute (in - kill) + gen
-		// currentInSet = newInitialFlow();
-		// currentOutSet.copy(currentInSet);
-		// currentInSet.removeKeys(kill);
-		// currentInSet.union(gen);
-		//
-		// inFlowSets.put(node, currentOutSet.copy());
+
+		// create Gen
+		Iterator<NameExpr> I = node.getRHS().getNameExpressions().iterator();
+		for (; I.hasNext();) {
+			NameExpr ne = I.next();
+			Set<AssignStmt> defs = new HashSet<AssignStmt>();
+			defs.add(node);
+			gen.put(ne.getVarName(), defs);
+		}
+		// compute (in - kill) + gen
+		currentInSet = newInitialFlow();
+		currentOutSet.copy(currentInSet);
+		currentInSet.removeKeys(kill);
+		currentInSet.union(gen);
+
+		inFlowSets.put(node, currentInSet.copy());
 	}
 
 	// Copy is straightforward.
 	@Override
 	public void copy(HashMapFlowMap<String, Set<AssignStmt>> src,
 			HashMapFlowMap<String, Set<AssignStmt>> dest) {
-		src.copy(dest);
+		if (src != null || dest != null) {
+			System.out.println("entering copy wala if block");
+			src.copy(dest);
+		}
 	}
 
 	// We just want to create this merger once. It's used in merge() below.
@@ -151,6 +155,7 @@ public class ReachingDefs
 
 		@Override
 		public void caseStmt(Stmt node) {
+			System.out.println("entered print wala caseStmt");
 			System.out.println("in {");
 			printMap(inFlowSets.get(node));
 			System.out.println("}");
