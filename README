@@ -1,0 +1,22 @@
+This is the provided code for COMP621 assignment 2.
+
+There are two examples:
+
+* The one in natlab.cs621.instrumentation instruments an input program
+  to count and display the number of assignments it makes at runtime.
+* The one in natlab.cs621.analysis is a simple reaching defs analysis.
+  (It doesn't handle: global variables, persistent variables, function
+   parameters, and nested functions.)
+
+You can build the code by running "ant". This generates two scripts:
+
+* profile-assignments.sh takes in matlab files and writes out the
+instrumented code in the "instrumented/" directory. (This directory is
+deleted and recreated it each time it's run.)
+
+e.g. ./profile-assignments.sh f1.m f2.m
+
+* analyze-reaching-defs.sh takes in matlab files and prints out analysis
+results for each function/script to standard output.
+
+e.g. ./analyze-reaching-defs.sh f1.m f2.m > results.txt
