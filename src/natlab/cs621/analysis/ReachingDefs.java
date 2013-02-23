@@ -1,16 +1,20 @@
 package natlab.cs621.analysis;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import natlab.toolkits.analysis.HashMapFlowMap;
 import natlab.toolkits.analysis.Merger;
 import natlab.toolkits.analysis.Mergers;
+import natlab.utils.NodeFinder;
 import nodecases.AbstractNodeCaseHandler;
 import analysis.AbstractSimpleStructuralForwardAnalysis;
 import ast.ASTNode;
 import ast.AssignStmt;
 import ast.EmptyStmt;
+import ast.Expr;
+import ast.Name;
 import ast.Stmt;
 
 /**
@@ -22,6 +26,8 @@ public class ReachingDefs
 		extends
 		AbstractSimpleStructuralForwardAnalysis<HashMapFlowMap<String, Set<AssignStmt>>> {
 	// Factory method, instantiates and runs the analysis
+	static int count = 0;
+
 	public static ReachingDefs of(ASTNode<?> tree) {
 		ReachingDefs analysis = new ReachingDefs(tree);
 		analysis.analyze();
@@ -67,13 +73,27 @@ public class ReachingDefs
 
 		// gen just maps every lvalue to a set containing this statement.
 		HashMapFlowMap<String, Set<AssignStmt>> gen = newInitialFlow();
-		node.getRHS().getSymbols();
+		Set<String> str = node.getRHS().getSymbols();
+		Iterator<String> x = str.iterator();
+		System.out.println("iteration #" + Integer.toString(count));
+		// for (; x.hasNext();) {
+		// System.out.println(x.next());
+		// }
+		System.out.println("end of iteration" + Integer.toString(count++));
 		for (String s : node.getLValues()) {
 			Set<AssignStmt> defs = new HashSet<AssignStmt>();
 			defs.add(node);
 			gen.put(s, defs);
 		}
-
+		// Iterator<ASTNode> I = node.getRHS().iterator();
+		// for (; I.hasNext();) {
+		// Iterable<Name> k = NodeFinder.find(Name.class, I.next());
+		// Iterator<Name> v = k.iterator();
+		// for (; v.hasNext();) {
+		// Name n = v.next();
+		// System.out.println(n.getVarName());
+		// }
+		// }
 		// compute (in - kill) + gen
 		currentOutSet = newInitialFlow();
 		currentInSet.copy(currentOutSet);
