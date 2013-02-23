@@ -35,7 +35,7 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	// This remembers either the current function name, or "script" for scripts
 	private String currentScope;
 	private int loopCount = 1;
-	static VFPreorderAnalysis kind;
+	VFPreorderAnalysis kind;
 	private int flag = 0;
 	// Statements in the skip set won't be analyzed / instrumented.
 	// In general we only want to analyze the input program, so we'll
@@ -105,8 +105,8 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	public void caseFunction(Function node) {
 		currentScope = node.getName();
 		instrumentStmtList(node.getStmts());
-		// kind = new VFPreorderAnalysis(node);
-		// kind.analyze();
+		kind = new VFPreorderAnalysis(node);
+		kind.analyze();
 		clearSkip();
 		node.getNestedFunctions().analyze(this);
 	}
@@ -163,6 +163,11 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	// }
 	// caseASTNode(node);
 	// }
+	@Override
+	public void caseStmt(Stmt node) {
+		kind = new VFPreorderAnalysis(node);
+		kind.analyze();
+	}
 
 	@Override
 	public void caseParameterizedExpr(ParameterizedExpr node) {
@@ -174,11 +179,19 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 			return;
 			// }
 		}
-		// Iterator<NameExpr> I = node.getNameExpressions().iterator();
-		// for (; I.hasNext();) {
-		// Name n = I.next().getName();
-		AstUtil.insertBefore(node.getParent(), increment("func"));
-		// }
+
+		Iterator<NameExpr> I = node.getNameExpressions().iterator();
+		for (; I.hasNext();) {
+			Name n = I.next().getName();
+			if (kind != null) {
+
+				if (kind.getResult(n).isFunction()) {
+					AstUtil.insertBefore(node.getParent(), increment("func"));
+				}
+			} else {
+				System.out.println("kind is null");
+			}
+		}
 		// skip.add((Stmt) node.getParent());
 		skipExpr.add(node);
 		// caseLValueExpr(node);
@@ -190,6 +203,15 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 		if (skip.contains(node)) {
 			return;
 		}
+		kind = new VFPreorderAnalysis(node);
+		kind.analyze();
+		Iterator<NameExpr> ne = node.getRHS().getNameExpressions().iterator();
+		while (ne.hasNext()) {
+			if (kind.getResult(ne.next().getName()).isFunction()) {
+				AstUtil.insertBefore(node, increment("func"));
+			}
+		}
+		skip.add(node);
 	}
 
 	/**

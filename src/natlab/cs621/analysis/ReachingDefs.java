@@ -9,7 +9,7 @@ import natlab.toolkits.analysis.Merger;
 import natlab.toolkits.analysis.Mergers;
 import nodecases.AbstractNodeCaseHandler;
 import analysis.AbstractSimpleStructuralBackwardAnalysis;
-import analysis.AbstractSimpleStructuralForwardAnalysis;
+//import analysis.AbstractSimpleStructuralForwardAnalysis;
 import ast.ASTNode;
 import ast.AssignStmt;
 import ast.EmptyStmt;
@@ -87,11 +87,11 @@ public class ReachingDefs
 
 		// gen just maps every lvalue to a set containing this statement.
 		HashMapFlowMap<String, Set<AssignStmt>> gen = newInitialFlow();
-		// for (String s : node.getLValues()) {
-		// Set<AssignStmt> defs = new HashSet<AssignStmt>();
-		// defs.add(node);
-		// gen.put(s, defs);
-		// }
+//		for (String s : node.getLValues()) {
+//			Set<AssignStmt> defs = new HashSet<AssignStmt>();
+//			defs.add(node);
+//			gen.put(s, defs);
+//		}
 
 		// create Gen
 		Iterator<NameExpr> I = node.getRHS().getNameExpressions().iterator();
@@ -115,7 +115,7 @@ public class ReachingDefs
 	public void copy(HashMapFlowMap<String, Set<AssignStmt>> src,
 			HashMapFlowMap<String, Set<AssignStmt>> dest) {
 		if (src != null || dest != null) {
-			System.out.println("entering copy wala if block");
+
 			src.copy(dest);
 		}
 	}
@@ -132,6 +132,7 @@ public class ReachingDefs
 	public void merge(HashMapFlowMap<String, Set<AssignStmt>> in1,
 			HashMapFlowMap<String, Set<AssignStmt>> in2,
 			HashMapFlowMap<String, Set<AssignStmt>> out) {
+		System.out.println("entering merger");
 		in1.union(UNION, in2, out);
 	}
 
@@ -155,7 +156,7 @@ public class ReachingDefs
 
 		@Override
 		public void caseStmt(Stmt node) {
-			System.out.println("entered print wala caseStmt");
+
 			System.out.println("in {");
 			printMap(inFlowSets.get(node));
 			System.out.println("}");
