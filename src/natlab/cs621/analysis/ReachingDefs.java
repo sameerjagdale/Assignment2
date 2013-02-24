@@ -6,6 +6,7 @@ import java.util.Set;
 
 import natlab.toolkits.analysis.HashMapFlowMap;
 import natlab.toolkits.analysis.HashMapFlowSet;
+import natlab.toolkits.analysis.Mergable;
 import natlab.toolkits.analysis.Merger;
 import natlab.toolkits.analysis.Mergers;
 import natlab.toolkits.analysis.varorfun.VFPreorderAnalysis;
@@ -108,16 +109,17 @@ public class ReachingDefs
 
 			defs.add(node);
 
-			if (kind.getResult(ne.getName()).isVariable()) {
+			if (kind.getResult(ne.getName()).isFunction() != true) {
 				gen.put(ne.getVarName(), defs);
+			} else {
+				System.out.println(ne.getVarName());
 			}
 		}
 		// compute (in - kill) + gen
 		currentInSet = newInitialFlow();
 		currentOutSet.copy(currentInSet);
 		currentInSet.removeKeys(kill);
-		currentInSet.union(gen);
-
+		currentInSet.union(UNION, gen);
 		inFlowSets.put(node, currentInSet.copy());
 	}
 
@@ -125,6 +127,7 @@ public class ReachingDefs
 	@Override
 	public void copy(HashMapFlowMap<String, Set<AssignStmt>> src,
 			HashMapFlowMap<String, Set<AssignStmt>> dest) {
+		// System.out.println("copy entered");
 		if (src != null || dest != null) {
 
 			src.copy(dest);
@@ -163,7 +166,7 @@ public class ReachingDefs
 		// out.put(v, defs);
 		// }
 		in1.union(UNION, in2, out);
-		// union(in1, in2, out);
+
 	}
 
 	// This class pretty prints the program annotated with analysis results.
@@ -221,4 +224,11 @@ public class ReachingDefs
 			}
 		}
 	}
+
+	// @Override
+	// public Object merge(Object arg0) {
+	// // TODO Auto-generated method stub
+	// System.out.println("merge called");
+	// return null;
+	// }
 }
