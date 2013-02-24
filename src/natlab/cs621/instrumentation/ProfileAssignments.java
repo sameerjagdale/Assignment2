@@ -79,11 +79,6 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	private void instrumentStmtList(List<Stmt> stmts) {
 		// insert the counter initialization statement as the first statement,
 		// and the counter display as the last statement
-		// stmts.insertChild(init("stmt"), 0);
-		// stmts.insertChild(init("loop"), 0);
-		// stmts.addChild(display("stmt"));
-		// stmts.addChild(display("loop"));
-		// recurse on children
 		stmts.insertChild(init("func"), 0);
 		stmts.addChild(display("func"));
 		caseASTNode(stmts);
@@ -156,13 +151,6 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 		caseASTNode(node);
 	}
 
-	// @Override
-	// public void caseName(Name node) {
-	// if (kind.getResult(node).isFunction()) {
-	// AstUtil.insertBefore(node, increment("func"));
-	// }
-	// caseASTNode(node);
-	// }
 	@Override
 	public void caseStmt(Stmt node) {
 		kind = new VFPreorderAnalysis(node);
@@ -172,12 +160,8 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	@Override
 	public void caseParameterizedExpr(ParameterizedExpr node) {
 		if (skipExpr.contains(node)) {
-			// if (flag == 0) {
-			// flag = 1;
-			// } else {
-			// flag = 0;
 			return;
-			// }
+
 		}
 
 		Iterator<NameExpr> I = node.getNameExpressions().iterator();
@@ -188,13 +172,10 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 				if (kind.getResult(n).isFunction()) {
 					AstUtil.insertBefore(node.getParent(), increment("func"));
 				}
-			} else {
-				System.out.println("kind is null");
 			}
 		}
-		// skip.add((Stmt) node.getParent());
+
 		skipExpr.add(node);
-		// caseLValueExpr(node);
 
 	}
 
@@ -224,7 +205,7 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 		if (skip.contains(node)) {
 			return;
 		}
-		// AstUtil.insertBefore(node, display("func"));
+
 		skip.add(node);
 	}
 }

@@ -5,8 +5,10 @@ import java.util.Iterator;
 import java.util.Set;
 
 import natlab.toolkits.analysis.HashMapFlowMap;
+import natlab.toolkits.analysis.HashMapFlowSet;
 import natlab.toolkits.analysis.Merger;
 import natlab.toolkits.analysis.Mergers;
+import natlab.toolkits.analysis.varorfun.VFPreorderAnalysis;
 import nodecases.AbstractNodeCaseHandler;
 import analysis.AbstractSimpleStructuralBackwardAnalysis;
 //import analysis.AbstractSimpleStructuralForwardAnalysis;
@@ -25,12 +27,15 @@ public class ReachingDefs
 		extends
 		AbstractSimpleStructuralBackwardAnalysis<HashMapFlowMap<String, Set<AssignStmt>>> {
 	// Factory method, instantiates and runs the analysis
+
 	public static ReachingDefs of(ASTNode<?> tree) {
 
 		ReachingDefs analysis = new ReachingDefs(tree);
 		analysis.analyze();
 		return analysis;
 	}
+
+	private VFPreorderAnalysis kind;
 
 	public void prettyPrint() {
 		getTree().analyze(this.new Printer());
@@ -65,7 +70,7 @@ public class ReachingDefs
 		if (currentInSet != null) {
 			inFlowSets.put(node, currentInSet.copy());
 		}
-		// System.out.println("copied in to in");
+
 	}
 
 	@Override
@@ -87,19 +92,25 @@ public class ReachingDefs
 
 		// gen just maps every lvalue to a set containing this statement.
 		HashMapFlowMap<String, Set<AssignStmt>> gen = newInitialFlow();
-//		for (String s : node.getLValues()) {
-//			Set<AssignStmt> defs = new HashSet<AssignStmt>();
-//			defs.add(node);
-//			gen.put(s, defs);
-//		}
+		// for (String s : node.getLValues()) {
+		// Set<AssignStmt> defs = new HashSet<AssignStmt>();
+		// defs.add(node);
+		// gen.put(s, defs);
+		// }
 
 		// create Gen
+		kind = new VFPreorderAnalysis(node);
+		kind.analyze();
 		Iterator<NameExpr> I = node.getRHS().getNameExpressions().iterator();
+		Set<AssignStmt> defs = new HashSet<AssignStmt>();
 		for (; I.hasNext();) {
 			NameExpr ne = I.next();
-			Set<AssignStmt> defs = new HashSet<AssignStmt>();
+
 			defs.add(node);
-			gen.put(ne.getVarName(), defs);
+
+			if (kind.getResult(ne.getName()).isVariable()) {
+				gen.put(ne.getVarName(), defs);
+			}
 		}
 		// compute (in - kill) + gen
 		currentInSet = newInitialFlow();
@@ -118,7 +129,14 @@ public class ReachingDefs
 
 			src.copy(dest);
 		}
+
 	}
+
+	// @Override
+	// public void union(HashMapFlowMap<String, Set<AssignStmt>> in1,
+	// HashMapFlowMap<String, Set<AssignStmt>> in2,
+	// HashMapFlowMap<String, Set<AssignStmt>> out) {
+	// }
 
 	// We just want to create this merger once. It's used in merge() below.
 	private static final Merger<Set<AssignStmt>> UNION = Mergers.union();
@@ -132,8 +150,20 @@ public class ReachingDefs
 	public void merge(HashMapFlowMap<String, Set<AssignStmt>> in1,
 			HashMapFlowMap<String, Set<AssignStmt>> in2,
 			HashMapFlowMap<String, Set<AssignStmt>> out) {
-		System.out.println("entering merger");
+
+		// Set<String> keys = new HashSet<String>();
+		// keys.addAll(in1.keySet());
+		// keys.addAll(in2.keySet());
+		// for (String v : keys) {
+		// Set<AssignStmt> defs = new HashSet<AssignStmt>();
+		// if (in1.containsKey(v))
+		// defs.addAll(in1.get(v));
+		// if (in2.containsKey(v))
+		// defs.addAll(in2.get(v));
+		// out.put(v, defs);
+		// }
 		in1.union(UNION, in2, out);
+		// union(in1, in2, out);
 	}
 
 	// This class pretty prints the program annotated with analysis results.
