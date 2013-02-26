@@ -37,15 +37,15 @@ public class Main {
 		// by defining appropriate caseFunction and caseScript methods.
 
 		// Map functions and scripts to their analysis results
-		Map<ASTNode<?>, ReachingDefs> analyses = new HashMap<ASTNode<?>, ReachingDefs>();
+		Map<ASTNode<?>, LiveVariable> analyses = new HashMap<ASTNode<?>, LiveVariable>();
 		for (Program unit : program.getPrograms()) {
 
 			if (unit instanceof Script) {
 
-				analyses.put(unit, ReachingDefs.of(unit));
+				analyses.put(unit, LiveVariable.of(unit));
 			} else if (unit instanceof FunctionList) {
 				for (Function f : ((FunctionList) unit).getFunctions()) {
-					analyses.put(f, ReachingDefs.of(f));
+					analyses.put(f, LiveVariable.of(f));
 				}
 			}
 		}

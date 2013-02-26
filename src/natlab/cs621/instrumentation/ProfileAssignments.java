@@ -3,12 +3,15 @@ package natlab.cs621.instrumentation;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Stack;
 
 import natlab.toolkits.analysis.varorfun.VFPreorderAnalysis;
 import natlab.utils.NodeFinder;
 import nodecases.AbstractNodeCaseHandler;
 import ast.ASTNode;
 import ast.AssignStmt;
+import ast.EndCallExpr;
+import ast.EndExpr;
 import ast.Expr;
 import ast.ForStmt;
 import ast.Function;
@@ -20,6 +23,7 @@ import ast.ParameterizedExpr;
 import ast.ReturnStmt;
 import ast.Script;
 import ast.Stmt;
+import ast.SwitchStmt;
 import ast.WhileStmt;
 
 /**
@@ -32,11 +36,17 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 		node.analyze(new ProfileAssignments());
 	}
 
+	// private ASTNode<?> startNode;
+
+	public ProfileAssignments() {
+		// loopList = new Stack<Stmt>();
+	}
+
 	// This remembers either the current function name, or "script" for scripts
 	private String currentScope;
 	private int loopCount = 1;
 	VFPreorderAnalysis kind;
-	private int flag = 0;
+	// private int flag = 0;
 	// Statements in the skip set won't be analyzed / instrumented.
 	// In general we only want to analyze the input program, so we'll
 	// add the instrumentation statements we create to this set.
@@ -44,6 +54,8 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	// whatever reason.
 	private Set<Stmt> skip = new HashSet<Stmt>();
 	private Set<Expr> skipExpr = new HashSet<Expr>();
+
+	// private Stack<Stmt> loopList;
 
 	// Little helper to add something to the skip set while still using it as an
 	// expression
@@ -90,14 +102,17 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	}
 
 	public void caseScript(Script node) {
+		// startNode = node;
 		currentScope = "script";
 		instrumentStmtList(node.getStmts());
 		kind = new VFPreorderAnalysis(node);
 		kind.analyze();
 		clearSkip();
+		// loopList = new Stack<Stmt>();
 	}
 
 	public void caseFunction(Function node) {
+		// startNode = node;
 		currentScope = node.getName();
 		instrumentStmtList(node.getStmts());
 		kind = new VFPreorderAnalysis(node);
@@ -114,9 +129,11 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	 * assignments to i. We do this by adding a counter update as the first
 	 * statement in the loop body.
 	 */
+
 	@Override
 	public void caseForStmt(ForStmt node) {
-
+		// Stmt outerNode = null;
+		System.out.println("entering for");
 		if (skip.contains(node)) {
 			return;
 		}
@@ -130,7 +147,7 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 		AstUtil.insertAfter(node, newnode);
 
 		skip.add(node);
-		skip.add(newnode);
+		// skip.add(newnode);
 		caseASTNode(node);
 	}
 
@@ -142,12 +159,19 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 		AstUtil.insertBefore(node,
 				init("loop" + "_" + Integer.toString(loopCount)));
 
+		init("loop_" + Integer.toString(loopCount));
 		node.getStmtList().insertChild(
 				increment("loop" + "_" + Integer.toString(loopCount)), 0);
 		AstUtil.insertAfter(node,
 				display("loop" + "_" + Integer.toString(loopCount++)));
+
 		skip.add(node);
 
+		caseASTNode(node);
+	}
+
+	@Override
+	public void caseIfStmt(IfStmt node) {
 		caseASTNode(node);
 	}
 
@@ -155,6 +179,14 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	public void caseStmt(Stmt node) {
 		kind = new VFPreorderAnalysis(node);
 		kind.analyze();
+		// Iterator<NameExpr> ne = node.getNameExpressions().iterator();
+		// for (; ne.hasNext();) {
+		// if (ne.next().getVarName().toString().substring(0, 1).equals("end"))
+		// {
+		// System.out.println("entered pop");
+		// loopList.pop();
+		// }
+		// }
 	}
 
 	@Override
@@ -205,7 +237,10 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 		if (skip.contains(node)) {
 			return;
 		}
-
+		// for (int i = 1; i <= loopCount; i++) {
+		// AstUtil.insertBefore(node, display("loop_" + Integer.toString(i)));
+		// }
+		AstUtil.insertBefore(node, display("func"));
 		skip.add(node);
 	}
 }
