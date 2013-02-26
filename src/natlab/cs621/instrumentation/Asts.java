@@ -33,13 +33,12 @@ public class Asts {
 	// disp([Total # of runtime assignments made by scope: ',
 	// num2str(counter)]);
 	public static ExprStmt display(String scope) {
-		return new ExprStmt(
-				functionCall(
-						"disp",
-						row(string("Total # of Loop Iterations made by "
-								+ scope + ": "),
-								functionCall("num2str", new NameExpr(new Name(
-										scope + "_counter"))))));
+
+		return new ExprStmt(functionCall(
+				"disp",
+				row(string("Total # of" + scope + " : "),
+						functionCall("num2str", new NameExpr(new Name(scope
+								+ "_counter"))))));
 	}
 
 	// Helpers, because manual AST construction can be very verbose

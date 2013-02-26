@@ -25,7 +25,7 @@ public class Main {
 
 	public static void main(String[] args) throws IOException {
 		// Parse the input files into an AST.
-		System.out.println("Initiate ");
+
 		CompilationUnits program = Parsing.files(args);
 
 		// Run the analysis here.
@@ -55,7 +55,7 @@ public class Main {
 			System.out.println("Reaching defs for " + getName(node));
 			analyses.get(node).prettyPrint();
 		}
-		System.out.println("done");
+
 	}
 
 }

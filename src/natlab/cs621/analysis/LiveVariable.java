@@ -5,28 +5,22 @@ import java.util.Iterator;
 import java.util.Set;
 
 import natlab.toolkits.analysis.HashMapFlowMap;
-import natlab.toolkits.analysis.HashMapFlowSet;
-import natlab.toolkits.analysis.Mergable;
+
 import natlab.toolkits.analysis.Merger;
 import natlab.toolkits.analysis.Mergers;
 import natlab.toolkits.analysis.varorfun.VFPreorderAnalysis;
 import nodecases.AbstractNodeCaseHandler;
 import analysis.AbstractSimpleStructuralBackwardAnalysis;
-//import analysis.AbstractSimpleStructuralForwardAnalysis;
 import ast.ASTNode;
 import ast.AssignStmt;
-import ast.BinaryExpr;
 import ast.EmptyStmt;
-import ast.ForStmt;
 import ast.IfStmt;
 import ast.NameExpr;
 import ast.Stmt;
 import ast.WhileStmt;
 
 /**
- * This is a simple reaching defs analysis. It doesn't handle function
- * parameters, global variables, or persistent variables. (It just maps variable
- * names to assignment statements). It also doesn't handle nested functions.
+ * This is a code for Intra-procedural Live Variable analysis.
  */
 public class LiveVariable
 		extends
@@ -40,6 +34,7 @@ public class LiveVariable
 		return analysis;
 	}
 
+	// Used for Kind analysis
 	private VFPreorderAnalysis kind;
 
 	public void prettyPrint() {
@@ -60,6 +55,9 @@ public class LiveVariable
 		return new HashMapFlowMap<String, Set<Stmt>>();
 	}
 
+	/**
+	 * Handles statements where No variable is generated or killed
+	 */
 	@Override
 	public void caseStmt(Stmt node) {
 		outFlowSets.put(node, currentOutSet.copy());
@@ -68,6 +66,10 @@ public class LiveVariable
 
 	}
 
+	/**
+	 * Handles the if Statement. Also handles LHS variables in case of
+	 * conditional expressions
+	 */
 	@Override
 	public void caseIfStmt(IfStmt node) {
 		outFlowSets.put(node, currentOutSet.copy());
@@ -95,6 +97,9 @@ public class LiveVariable
 		inFlowSets.put(node, currentInSet.copy());
 	}
 
+	/**
+	 * Handles code for while statements. Similar to if.
+	 */
 	@Override
 	public void caseWhileStmt(WhileStmt node) {
 		outFlowSets.put(node, currentOutSet.copy());
@@ -122,6 +127,9 @@ public class LiveVariable
 		inFlowSets.put(node, currentInSet.copy());
 	}
 
+	/**
+	 * Handles code for Assignment statements
+	 */
 	@Override
 	public void caseAssignStmt(AssignStmt node) {
 
@@ -131,10 +139,9 @@ public class LiveVariable
 
 		Set<String> kill = node.getLValues();
 
-		// gen just maps every lvalue to a set containing this statement.
 		HashMapFlowMap<String, Set<Stmt>> gen = newInitialFlow();
 
-		// create Gen
+		// Kind analysis to differentiate functions from arrays
 		kind = new VFPreorderAnalysis(node);
 		kind.analyze();
 		Iterator<NameExpr> I = node.getRHS().getNameExpressions().iterator();
@@ -181,17 +188,6 @@ public class LiveVariable
 			HashMapFlowMap<String, Set<Stmt>> in2,
 			HashMapFlowMap<String, Set<Stmt>> out) {
 
-		// Set<String> keys = new HashSet<String>();
-		// keys.addAll(in1.keySet());
-		// keys.addAll(in2.keySet());
-		// for (String v : keys) {
-		// Set<AssignStmt> defs = new HashSet<AssignStmt>();
-		// if (in1.containsKey(v))
-		// defs.addAll(in1.get(v));
-		// if (in2.containsKey(v))
-		// defs.addAll(in2.get(v));
-		// out.put(v, defs);
-		// }
 		in1.union(UNION, in2, out);
 
 	}
@@ -216,13 +212,9 @@ public class LiveVariable
 
 		@Override
 		public void caseStmt(Stmt node) {
-			Set<ASTNode> skip = new HashSet<ASTNode>();
-			if (skip.contains(node)) {
-				return;
-			}
-			for (int i = 0; i < node.getNumChild(); i++) {
-				skip.add(node.getChild(i));
 
+			if (inFlowSets.get(node) == null) {
+				return;
 			}
 			System.out.println("in {");
 			printMap(inFlowSets.get(node));
@@ -256,10 +248,4 @@ public class LiveVariable
 		}
 	}
 
-	// @Override
-	// public Object merge(Object arg0) {
-	// // TODO Auto-generated method stub
-	// System.out.println("merge called");
-	// return null;
-	// }
 }

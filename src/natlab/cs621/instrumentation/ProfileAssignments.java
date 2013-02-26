@@ -46,7 +46,7 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	private String currentScope;
 	private int loopCount = 1;
 	VFPreorderAnalysis kind;
-	// private int flag = 0;
+
 	// Statements in the skip set won't be analyzed / instrumented.
 	// In general we only want to analyze the input program, so we'll
 	// add the instrumentation statements we create to this set.
@@ -54,8 +54,6 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	// whatever reason.
 	private Set<Stmt> skip = new HashSet<Stmt>();
 	private Set<Expr> skipExpr = new HashSet<Expr>();
-
-	// private Stack<Stmt> loopList;
 
 	// Little helper to add something to the skip set while still using it as an
 	// expression
@@ -133,7 +131,7 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 	@Override
 	public void caseForStmt(ForStmt node) {
 		// Stmt outerNode = null;
-		System.out.println("entering for");
+
 		if (skip.contains(node)) {
 			return;
 		}
