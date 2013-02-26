@@ -218,8 +218,13 @@ public class ProfileAssignments extends AbstractNodeCaseHandler {
 		kind.analyze();
 		Iterator<NameExpr> ne = node.getRHS().getNameExpressions().iterator();
 		while (ne.hasNext()) {
-			if (kind.getResult(ne.next().getName()).isFunction()) {
-				AstUtil.insertBefore(node, increment("func"));
+			if (kind != null) {
+				if (kind.getResult(ne.next().getName()).isFunction()) {
+					AstUtil.insertBefore(node, increment("func"));
+				}
+
+			} else {
+				System.out.println("kind is null");
 			}
 		}
 		skip.add(node);

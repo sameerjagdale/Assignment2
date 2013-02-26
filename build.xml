@@ -19,15 +19,15 @@ java -cp ${bin}:${natlab-jar} @{class} "$@"
     <mkdir dir="${bin}" />
     <javac includeantruntime="false"
            srcdir="${src}" destdir="${bin}" classpath="${natlab-jar}" />
-    <write-runner-script file="profile-assignments.sh"
+    <write-runner-script file="profile.sh"
                          class="natlab.cs621.instrumentation.Main" />
-    <write-runner-script file="analyze-reaching-defs.sh"
+    <write-runner-script file="analyze-live-variable.sh"
                          class="natlab.cs621.analysis.Main" />
   </target>
 
   <target name="clean" description="clean up">
     <delete dir="${bin}" failonerror="false" />
-    <delete file="profile-assignments.sh" failonerror="false" />
-    <delete file="analyze-reaching-defs.sh" failonerror="false" />
+    <delete file="profile.sh" failonerror="false" />
+    <delete file="analyze-live-variable.sh" failonerror="false" />
   </target>
 </project>

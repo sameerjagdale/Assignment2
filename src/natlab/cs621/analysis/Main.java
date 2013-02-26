@@ -52,7 +52,7 @@ public class Main {
 
 		// Report the analysis results.
 		for (ASTNode<?> node : analyses.keySet()) {
-			System.out.println("Reaching defs for " + getName(node));
+			System.out.println("Live variable analysis for " + getName(node));
 			analyses.get(node).prettyPrint();
 		}
 
